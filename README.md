@@ -2,44 +2,59 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+# North Pole Waitlist - Family Gift Exchange App
 
-This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://aistudio.corp.google.com/apps/drive/1Yd4K6mEMuWKqRP-ymKBQ5kvI0d7_1ScS
+A beautiful Christmas-themed family wishlist application for coordinating gift exchanges. Create wishlists, claim gifts, and avoid duplicate presents!
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
-
+**Prerequisites:** Node.js
 
 1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+   ```bash
+   npm install
+   ```
 
-## Deploy to Vercel
+2. Run the app:
+   ```bash
+   npm run dev
+   ```
 
-Deploy this app publicly in just a few clicks:
+3. Open [http://localhost:3000](http://localhost:3000)
 
-1. **Quick Deploy** (Recommended):
-   - Click this button: [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=YOUR_REPO_URL)
-   - Or visit [vercel.com](https://vercel.com) and import your GitHub repository
+## Live Demo
 
-2. **Configure Environment Variable**:
-   - In your Vercel project settings, add the environment variable:
-     - Name: `GEMINI_API_KEY`
-     - Value: Your Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey)
+🎄 **[View Live App](https://ajfrai.github.io/north-pole-waitlist/)**
 
-3. **Deploy**:
-   - Vercel will automatically build and deploy your app
-   - You'll get a public URL like `your-app.vercel.app`
+The app is automatically deployed to GitHub Pages whenever changes are pushed to the main branch.
+
+## Features
+
+- ✨ Create personal wishlists for family members
+- 🎁 Add gifts with links, prices, stores, and notes
+- 💝 Claim gifts to avoid duplicate purchases
+- 🎅 AI-powered gift suggestions based on interests
+- 🔄 Family sync with shareable codes
+- 📱 Mobile-friendly responsive design
+- ❄️ Festive Christmas theme with snowfall animation
+
+## Deployment
+
+This app automatically deploys to GitHub Pages via GitHub Actions. The workflow:
+
+1. Triggers on push to `main` branch
+2. Builds the app with Vite
+3. Deploys to GitHub Pages
+
+To deploy to your own GitHub Pages:
+
+1. Fork this repository
+2. Go to Settings > Pages
+3. Select "GitHub Actions" as the source
+4. Push to the main branch to trigger deployment
 
 ### Alternative Deployment Options
 
+- **Vercel**: Import from Git at [vercel.com](https://vercel.com)
 - **Netlify**: Import from Git at [netlify.com](https://netlify.com)
 - **Cloudflare Pages**: Deploy via [pages.cloudflare.com](https://pages.cloudflare.com)
-- **GitHub Pages**: Build locally with `npm run build` and deploy the `dist` folder
-
-All platforms support the `GEMINI_API_KEY` environment variable needed for AI features.
