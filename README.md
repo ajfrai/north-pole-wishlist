@@ -33,10 +33,10 @@ The app is automatically deployed to GitHub Pages whenever changes are pushed to
 - ✨ Create personal wishlists for family members
 - 🎁 Add gifts with links, prices, stores, and notes
 - 💝 Claim gifts to avoid duplicate purchases
-- 🎅 AI-powered gift suggestions based on interests
-- 🔄 Family sync with shareable codes
+- 🛍️ Track your claimed gifts with a shopping list
+- 🔄 Family sync with shareable codes (dev mode)
 - 📱 Mobile-friendly responsive design
-- ❄️ Festive Christmas theme with snowfall animation
+- ❄️ Festive Christmas theme with celebratory snowflakes
 
 ## Deployment
 

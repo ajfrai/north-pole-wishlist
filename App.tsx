@@ -1,9 +1,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Gift, User, ExternalLink, Trash, Plus, Check, Sparkles, ArrowLeft, RefreshCw, Heart, Link as LinkIcon, Info, Cloud, CloudOff, Users, X, Save, Settings, Copy, AlertTriangle, Clock, Tag, ShoppingBag, HelpCircle } from 'lucide-react';
+import { Gift, User, ExternalLink, Trash, Plus, Check, ArrowLeft, RefreshCw, Heart, Link as LinkIcon, Info, Cloud, CloudOff, Users, X, Save, Settings, Copy, AlertTriangle, Clock, Tag, ShoppingBag, HelpCircle } from 'lucide-react';
 import { AppData, WishList, GiftItem, ViewState } from './types';
 import { fetchAppData, saveAppData, getBucketId, setBucketId } from './services/storage';
-import { getGiftSuggestions } from './services/gemini';
 import Snowflakes from './components/Snowflakes';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -28,13 +27,12 @@ function App() {
 
   // Create List State
   const [creatingListName, setCreatingListName] = useState('');
-  const [creatingListLink, setCreatingListLink] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
   // Add User State
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [newUserName, setNewUserName] = useState('');
-  
+
   // List Item State
   const [newItemName, setNewItemName] = useState('');
   const [newItemLink, setNewItemLink] = useState('');
@@ -43,18 +41,15 @@ function App() {
   const [newItemNotes, setNewItemNotes] = useState('');
   const [newItemBF, setNewItemBF] = useState(false);
   const [newItemUrgent, setNewItemUrgent] = useState(false);
-  
-  // Edit List State
-  const [isEditingList, setIsEditingList] = useState(false);
-  const [editListLink, setEditListLink] = useState('');
-  
-  // AI State
-  const [aiInterests, setAiInterests] = useState('');
-  const [aiAge, setAiAge] = useState('');
-  const [isAiLoading, setIsAiLoading] = useState(false);
 
   // Celebration State
   const [showCelebration, setShowCelebration] = useState(false);
+
+  // Dev mode flag
+  const [isDevMode] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('dev') === 'true';
+  });
 
   // --- Effects ---
   const loadData = useCallback(async () => {
@@ -170,13 +165,12 @@ function App() {
     const newList: WishList = {
       id: uuidv4(),
       owner: name,
-      externalLink: creatingListLink.trim(),
       items: [],
       colorTheme: ['red', 'green', 'gold'][Math.floor(Math.random() * 3)] as 'red' | 'green' | 'gold'
     };
 
-    const updatedUsers = appData.users.some(u => u.toLowerCase() === name.toLowerCase()) 
-        ? appData.users 
+    const updatedUsers = appData.users.some(u => u.toLowerCase() === name.toLowerCase())
+        ? appData.users
         : [...appData.users, name];
 
     const newData = {
@@ -187,7 +181,6 @@ function App() {
 
     await persistData(newData);
     setCreatingListName('');
-    setCreatingListLink('');
     setIsCreating(false);
     setActiveListId(newList.id);
     setView('LIST');
@@ -280,44 +273,28 @@ function App() {
 
     await persistData({ ...appData, lists: updatedLists });
   };
-  
-  const handleUpdateListLink = async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!activeListId) return;
-      
-      const listIndex = appData.lists.findIndex(l => l.id === activeListId);
-      if (listIndex === -1) return;
-      
-      const updatedLists = [...appData.lists];
-      updatedLists[listIndex] = {
-          ...updatedLists[listIndex],
-          externalLink: editListLink
-      };
-      
-      await persistData({ ...appData, lists: updatedLists });
-      setIsEditingList(false);
+
+  const handleTogglePurchased = async (listId: string, itemId: string) => {
+    const listIndex = appData.lists.findIndex(l => l.id === listId);
+    if (listIndex === -1) return;
+
+    const list = appData.lists[listIndex];
+    const itemIndex = list.items.findIndex(i => i.id === itemId);
+    if (itemIndex === -1) return;
+
+    const item = list.items[itemIndex];
+
+    // Only allow toggling if current user claimed it
+    if (item.claimedBy !== currentUser) return;
+
+    const updatedLists = [...appData.lists];
+    const updatedItems = [...list.items];
+    updatedItems[itemIndex] = { ...item, isPurchased: !item.isPurchased };
+    updatedLists[listIndex] = { ...list, items: updatedItems };
+
+    await persistData({ ...appData, lists: updatedLists });
   };
 
-  const handleAiSuggest = async () => {
-    if (!aiInterests.trim()) return;
-    setIsAiLoading(true);
-    const suggestions = await getGiftSuggestions(aiInterests, aiAge || 'any');
-    
-    if (activeListId) {
-       const listIndex = appData.lists.findIndex(l => l.id === activeListId);
-       if (listIndex !== -1) {
-         const updatedLists = [...appData.lists];
-         updatedLists[listIndex] = {
-           ...updatedLists[listIndex],
-           items: [...updatedLists[listIndex].items, ...suggestions]
-         };
-         await persistData({ ...appData, lists: updatedLists });
-       }
-    }
-    setIsAiLoading(false);
-    setAiInterests('');
-    setAiAge('');
-  };
 
   // --- Components ---
 
@@ -411,14 +388,25 @@ function App() {
             </div>
 
             <div className="flex gap-2">
-                <button 
-                    onClick={() => setShowSyncModal(true)}
-                    className="bg-white/10 hover:bg-white/20 px-2 py-1 rounded text-xs font-medium flex items-center gap-1 transition"
-                    title="Family Sync Settings"
-                >
-                    <Settings size={14} /> Code
-                </button>
-                 <button 
+                {currentUser && (
+                    <button
+                        onClick={() => { setView('MY_CLAIMS'); setActiveListId(null); }}
+                        className="bg-white/10 hover:bg-white/20 px-2 py-1 rounded text-xs font-medium flex items-center gap-1 transition"
+                        title="My Shopping List"
+                    >
+                        <ShoppingBag size={14} /> My Claims
+                    </button>
+                )}
+                {isDevMode && (
+                    <button
+                        onClick={() => setShowSyncModal(true)}
+                        className="bg-white/10 hover:bg-white/20 px-2 py-1 rounded text-xs font-medium flex items-center gap-1 transition"
+                        title="Family Sync Settings (Dev Mode)"
+                    >
+                        <Settings size={14} /> Code
+                    </button>
+                )}
+                <button
                     onClick={() => setShowHelpModal(true)}
                     className="bg-white/10 hover:bg-white/20 px-2 py-1 rounded text-xs font-medium flex items-center gap-1 transition"
                     title="Help"
@@ -580,23 +568,14 @@ function App() {
                         <h3 className="font-bold text-gray-700 mb-3 text-center">Add Person</h3>
                         
                         <label className="block text-xs font-bold text-gray-500 mb-1">Name</label>
-                        <input 
+                        <input
                             autoFocus
                             type="text"
                             placeholder="e.g. Grandma"
                             value={creatingListName}
                             onChange={(e) => setCreatingListName(e.target.value)}
-                            className="w-full px-3 py-2 border rounded-lg mb-3 focus:outline-none focus:border-christmas-green text-sm"
-                            required
-                        />
-
-                        <label className="block text-xs font-bold text-gray-500 mb-1">Registry Link (Optional)</label>
-                        <input 
-                            type="text"
-                            placeholder="Amazon/Target..."
-                            value={creatingListLink}
-                            onChange={(e) => setCreatingListLink(e.target.value)}
                             className="w-full px-3 py-2 border rounded-lg mb-4 focus:outline-none focus:border-christmas-green text-sm"
+                            required
                         />
 
                         <div className="flex gap-2">
@@ -673,53 +652,14 @@ function App() {
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
             <div className="bg-christmas-green p-6 text-white relative overflow-hidden">
                 <div className="relative z-10">
-                    <div className="flex justify-between items-start">
-                        <h2 className="text-3xl font-bold flex items-center gap-3">
-                            {activeList.owner}'s Wishlist
-                            {isOwner && <span className="bg-christmas-gold text-christmas-green text-xs px-2 py-1 rounded-full uppercase tracking-wider font-bold shadow-sm">Me</span>}
-                        </h2>
-                        {isOwner && (
-                            <button 
-                                onClick={() => { setIsEditingList(!isEditingList); setEditListLink(activeList.externalLink || ''); }}
-                                className="bg-white/10 p-2 rounded hover:bg-white/20 transition"
-                                title="Edit List Settings"
-                            >
-                                <Settings size={20} />
-                            </button>
-                        )}
-                    </div>
-                    
+                    <h2 className="text-3xl font-bold flex items-center gap-3">
+                        {activeList.owner}'s Wishlist
+                        {isOwner && <span className="bg-christmas-gold text-christmas-green text-xs px-2 py-1 rounded-full uppercase tracking-wider font-bold shadow-sm">Me</span>}
+                    </h2>
+
                     <p className="text-green-100 opacity-90 mt-1">
                         {isOwner ? "Add things you'd love to receive!" : `Pick something special for ${activeList.owner}.`}
                     </p>
-                    
-                    {isEditingList ? (
-                        <form onSubmit={handleUpdateListLink} className="mt-4 bg-white/10 p-3 rounded-lg backdrop-blur-sm animate-fade-in">
-                            <label className="block text-xs font-bold text-green-100 mb-1">External Registry Link</label>
-                            <div className="flex gap-2">
-                                <input 
-                                    type="text" 
-                                    value={editListLink}
-                                    onChange={(e) => setEditListLink(e.target.value)}
-                                    placeholder="https://amazon.com/..."
-                                    className="flex-1 text-gray-800 text-sm rounded px-2 py-1 outline-none"
-                                />
-                                <button type="submit" className="bg-christmas-gold text-green-900 px-3 py-1 rounded text-sm font-bold">Save</button>
-                            </div>
-                        </form>
-                    ) : (
-                        activeList.externalLink && (
-                            <a 
-                                href={activeList.externalLink} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 mt-4 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-sm font-bold transition border border-white/20"
-                            >
-                                <LinkIcon size={16} /> Registry Link
-                                <ExternalLink size={14} />
-                            </a>
-                        )
-                    )}
                 </div>
             </div>
 
@@ -801,40 +741,6 @@ function App() {
                             </button>
                         </div>
                     </form>
-                    
-                    {/* AI Helper */}
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                         <details className="group">
-                            <summary className="flex items-center gap-2 text-sm font-medium text-blue-600 cursor-pointer hover:text-blue-800">
-                                <Sparkles size={16} /> Need ideas? Use AI Elf
-                            </summary>
-                            <div className="mt-3 pl-4 border-l-2 border-blue-100">
-                                <div className="flex gap-2 mb-2">
-                                    <input
-                                        type="text"
-                                        placeholder="Likes (e.g. Cooking)"
-                                        value={aiInterests}
-                                        onChange={(e) => setAiInterests(e.target.value)}
-                                        className="flex-1 text-sm border rounded px-2 py-1"
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder="Age Group"
-                                        value={aiAge}
-                                        onChange={(e) => setAiAge(e.target.value)}
-                                        className="w-24 text-sm border rounded px-2 py-1"
-                                    />
-                                </div>
-                                <button
-                                    onClick={handleAiSuggest}
-                                    disabled={isAiLoading || !aiInterests}
-                                    className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 font-semibold w-full flex justify-center items-center gap-2"
-                                >
-                                    {isAiLoading ? <RefreshCw className="animate-spin" size={12} /> : 'Generate Suggestions'}
-                                </button>
-                            </div>
-                        </details>
-                    </div>
                 </div>
 
                 {/* List Items */}
@@ -946,6 +852,100 @@ function App() {
     );
   };
 
+  const renderMyClaims = () => {
+    // Get all items claimed by current user across all lists
+    const myClaimedItems: Array<{ item: GiftItem; listOwner: string; listId: string }> = [];
+
+    appData.lists.forEach(list => {
+      list.items.forEach(item => {
+        if (item.claimedBy === currentUser) {
+          myClaimedItems.push({ item, listOwner: list.owner, listId: list.id });
+        }
+      });
+    });
+
+    const purchasedCount = myClaimedItems.filter(({ item }) => item.isPurchased).length;
+
+    return (
+      <div className="max-w-3xl mx-auto p-4 pb-20 animate-fade-in">
+        <button
+          onClick={() => { setView('HOME'); loadData(); }}
+          className="flex items-center gap-2 text-gray-600 hover:text-christmas-red mb-6 transition"
+        >
+          <ArrowLeft size={18} /> Back to all lists
+        </button>
+
+        <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-3xl font-bold text-christmas-green flex items-center gap-2">
+              <ShoppingBag size={32} /> My Shopping List
+            </h2>
+            <div className="text-sm text-gray-600">
+              {purchasedCount} of {myClaimedItems.length} purchased
+            </div>
+          </div>
+
+          {myClaimedItems.length === 0 ? (
+            <div className="text-center py-12 text-gray-400">
+              <ShoppingBag size={48} className="mx-auto mb-3 opacity-30" />
+              <p>You haven't claimed any gifts yet.</p>
+              <p className="text-sm mt-2">Go to someone's wishlist and claim gifts you plan to buy!</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {myClaimedItems.map(({ item, listOwner, listId }) => (
+                <div
+                  key={item.id}
+                  className={`flex items-start gap-3 p-4 rounded-lg border transition ${
+                    item.isPurchased
+                      ? 'bg-green-50 border-green-200'
+                      : 'bg-white border-gray-200 hover:border-christmas-green'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={item.isPurchased || false}
+                    onChange={() => handleTogglePurchased(listId, item.id)}
+                    className="mt-1 w-5 h-5 rounded accent-christmas-green cursor-pointer"
+                  />
+
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className={`font-semibold text-lg ${item.isPurchased ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                          {item.name}
+                        </h3>
+                        <p className="text-sm text-gray-600 mb-2">For: <span className="font-medium text-christmas-red">{listOwner}</span></p>
+
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-600">
+                          {item.store && <span className="flex items-center gap-1"><ShoppingBag size={12} /> {item.store}</span>}
+                          {item.price && <span className="font-semibold text-green-700">{item.price}</span>}
+                        </div>
+
+                        {item.notes && <p className="text-xs text-gray-500 mt-1 italic">{item.notes}</p>}
+                      </div>
+
+                      {item.link && (
+                        <a
+                          href={item.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs flex items-center gap-1 text-blue-500 hover:underline border border-blue-200 px-2 py-1 rounded whitespace-nowrap"
+                        >
+                          Link <ExternalLink size={10} />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const renderStatus = () => (
     <div className="fixed bottom-2 right-2 flex items-center gap-1.5 bg-white/90 backdrop-blur px-3 py-1.5 rounded-full shadow-sm border border-gray-200 text-xs font-medium text-gray-500 z-50">
         {syncStatus === 'SYNCED' && <><Cloud size={12} className="text-green-500" /> Online Mode</>}
@@ -963,6 +963,7 @@ function App() {
       {renderAlertModal()}
       {view === 'HOME' && renderHome()}
       {view === 'LIST' && renderActiveList()}
+      {view === 'MY_CLAIMS' && renderMyClaims()}
       {renderStatus()}
     </div>
   );
