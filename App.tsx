@@ -53,6 +53,9 @@ function App() {
   const [aiAge, setAiAge] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
 
+  // Celebration State
+  const [showCelebration, setShowCelebration] = useState(false);
+
   // --- Effects ---
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -227,6 +230,9 @@ function App() {
     setNewItemNotes('');
     setNewItemBF(false);
     setNewItemUrgent(false);
+
+    // Show celebratory snowflakes!
+    setShowCelebration(true);
   };
 
   const handleDeleteItem = async (itemId: string) => {
@@ -666,7 +672,6 @@ function App() {
 
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
             <div className="bg-christmas-green p-6 text-white relative overflow-hidden">
-                <Snowflakes />
                 <div className="relative z-10">
                     <div className="flex justify-between items-start">
                         <h2 className="text-3xl font-bold flex items-center gap-3">
@@ -951,7 +956,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-[#F0EAD6] font-sans pb-10 relative">
-      <Snowflakes />
+      <Snowflakes show={showCelebration} onComplete={() => setShowCelebration(false)} />
       {renderHeader()}
       {renderSyncModal()}
       {renderHelpModal()}
