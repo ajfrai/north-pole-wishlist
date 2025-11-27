@@ -638,7 +638,7 @@ function App() {
     const activeList = appData.lists.find(l => l.id === activeListId);
     if (!activeList) return null;
 
-    const isOwner = currentUser === activeList.owner;
+    const isOwner = currentUser.toLowerCase() === activeList.owner.toLowerCase();
 
     return (
       <div className="max-w-3xl mx-auto p-4 pb-20 animate-fade-in">
