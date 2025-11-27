@@ -24,7 +24,7 @@ A beautiful Christmas-themed family wishlist application for coordinating gift e
 
 ## Live Demo
 
-🎄 **[View Live App](https://ajfrai.github.io/north-pole-waitlist/)**
+🎄 **[View Live App](https://ajfrai.github.io/north-pole-wishlist/)**
 
 The app is automatically deployed to GitHub Pages whenever changes are pushed to the main branch.
 
