@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Gift, User, ExternalLink, Trash, Plus, Check, ArrowLeft, RefreshCw, Heart, Link as LinkIcon, Info, Cloud, CloudOff, Users, X, Save, Settings, Copy, AlertTriangle, Clock, Tag, ShoppingBag, HelpCircle } from 'lucide-react';
+import { Gift, User, ExternalLink, Trash, Plus, Check, ArrowLeft, RefreshCw, Heart, Link as LinkIcon, Info, Cloud, CloudOff, Users, X, Save, Settings, Copy, AlertTriangle, Clock, Tag, ShoppingBag, HelpCircle, Edit } from 'lucide-react';
 import { AppData, WishList, GiftItem, ViewState } from './types';
 import { fetchAppData, saveAppData, getBucketId, setBucketId } from './services/storage';
 import Snowflakes from './components/Snowflakes';
@@ -45,10 +45,25 @@ function App() {
   // Celebration State
   const [showCelebration, setShowCelebration] = useState(false);
 
-  // Dev mode flag
+  // Edit Item State (debug mode only)
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editItemName, setEditItemName] = useState('');
+  const [editItemLink, setEditItemLink] = useState('');
+  const [editItemStore, setEditItemStore] = useState('');
+  const [editItemPrice, setEditItemPrice] = useState('');
+  const [editItemNotes, setEditItemNotes] = useState('');
+  const [editItemBF, setEditItemBF] = useState(false);
+  const [editItemUrgent, setEditItemUrgent] = useState(false);
+
+  // Dev/Debug mode flags
   const [isDevMode] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get('dev') === 'true';
+  });
+
+  const [isDebugMode] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('debug') === 'true';
   });
 
   // --- Effects ---
@@ -295,6 +310,57 @@ function App() {
     await persistData({ ...appData, lists: updatedLists });
   };
 
+  const handleStartEditItem = (item: GiftItem) => {
+    setEditingItemId(item.id);
+    setEditItemName(item.name);
+    setEditItemLink(item.link || '');
+    setEditItemStore(item.store || '');
+    setEditItemPrice(item.price || '');
+    setEditItemNotes(item.notes || '');
+    setEditItemBF(item.isBlackFriday || false);
+    setEditItemUrgent(item.isTimeSensitive || false);
+  };
+
+  const handleCancelEditItem = () => {
+    setEditingItemId(null);
+    setEditItemName('');
+    setEditItemLink('');
+    setEditItemStore('');
+    setEditItemPrice('');
+    setEditItemNotes('');
+    setEditItemBF(false);
+    setEditItemUrgent(false);
+  };
+
+  const handleSaveEditItem = async () => {
+    if (!activeListId || !editingItemId) return;
+
+    const listIndex = appData.lists.findIndex(l => l.id === activeListId);
+    if (listIndex === -1) return;
+
+    const list = appData.lists[listIndex];
+    const itemIndex = list.items.findIndex(i => i.id === editingItemId);
+    if (itemIndex === -1) return;
+
+    const updatedItem: GiftItem = {
+      ...list.items[itemIndex],
+      name: editItemName.trim(),
+      link: editItemLink.trim() || undefined,
+      store: editItemStore.trim() || undefined,
+      price: editItemPrice.trim() || undefined,
+      notes: editItemNotes.trim() || undefined,
+      isBlackFriday: editItemBF,
+      isTimeSensitive: editItemUrgent
+    };
+
+    const updatedLists = [...appData.lists];
+    const updatedItems = [...list.items];
+    updatedItems[itemIndex] = updatedItem;
+    updatedLists[listIndex] = { ...list, items: updatedItems };
+
+    await persistData({ ...appData, lists: updatedLists });
+    handleCancelEditItem();
+  };
 
   // --- Components ---
 
@@ -815,14 +881,101 @@ function App() {
                         activeList.items.map((item) => {
                             const isClaimed = !!item.claimedBy;
                             const claimedByMe = item.claimedBy === currentUser;
-                            
+                            const isEditing = editingItemId === item.id;
+
+                            if (isEditing && isDebugMode && isOwner) {
+                                // Edit mode
+                                return (
+                                    <div key={item.id} className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
+                                        <h3 className="text-sm font-bold text-blue-700 mb-3 flex items-center gap-2">
+                                            <Edit size={14} /> Editing Item
+                                        </h3>
+                                        <div className="space-y-3">
+                                            <div className="flex flex-col md:flex-row gap-3">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Gift Name"
+                                                    value={editItemName}
+                                                    onChange={(e) => setEditItemName(e.target.value)}
+                                                    className="flex-[2] px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Store"
+                                                    value={editItemStore}
+                                                    onChange={(e) => setEditItemStore(e.target.value)}
+                                                    className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                                />
+                                            </div>
+                                            <div className="flex flex-col md:flex-row gap-3">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Price"
+                                                    value={editItemPrice}
+                                                    onChange={(e) => setEditItemPrice(e.target.value)}
+                                                    className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Link"
+                                                    value={editItemLink}
+                                                    onChange={(e) => setEditItemLink(e.target.value)}
+                                                    className="flex-[2] px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                                />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                placeholder="Notes"
+                                                value={editItemNotes}
+                                                onChange={(e) => setEditItemNotes(e.target.value)}
+                                                className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                            />
+                                            <div className="flex gap-4">
+                                                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={editItemBF}
+                                                        onChange={(e) => setEditItemBF(e.target.checked)}
+                                                        className="accent-blue-600"
+                                                    />
+                                                    <span className="flex items-center gap-1"><Tag size={12} /> Black Friday</span>
+                                                </label>
+                                                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={editItemUrgent}
+                                                        onChange={(e) => setEditItemUrgent(e.target.checked)}
+                                                        className="accent-blue-600"
+                                                    />
+                                                    <span className="flex items-center gap-1"><Clock size={12} /> Urgent</span>
+                                                </label>
+                                            </div>
+                                            <div className="flex gap-2 pt-2">
+                                                <button
+                                                    onClick={handleCancelEditItem}
+                                                    className="flex-1 px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button
+                                                    onClick={handleSaveEditItem}
+                                                    className="flex-1 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-bold"
+                                                >
+                                                    Save Changes
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            }
+
                             return (
-                                <div 
-                                    key={item.id} 
+                                <div
+                                    key={item.id}
                                     className={`
                                         group flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-lg border transition-all
-                                        ${isClaimed && !isOwner 
-                                            ? 'bg-gray-50 border-gray-200' 
+                                        ${isClaimed && !isOwner
+                                            ? 'bg-gray-50 border-gray-200'
                                             : 'bg-white border-gray-100 hover:border-christmas-red hover:shadow-sm'}
                                     `}
                                 >
@@ -848,13 +1001,24 @@ function App() {
                                             </div>
 
                                             {isOwner && (
-                                                <button 
-                                                    onClick={() => handleDeleteItem(item.id)}
-                                                    className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity ml-2"
-                                                    title="Remove Item"
-                                                >
-                                                    <Trash size={16} />
-                                                </button>
+                                                <div className="flex gap-1">
+                                                    {isDebugMode && (
+                                                        <button
+                                                            onClick={() => handleStartEditItem(item)}
+                                                            className="text-gray-300 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                            title="Edit Item"
+                                                        >
+                                                            <Edit size={16} />
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        onClick={() => handleDeleteItem(item.id)}
+                                                        className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        title="Remove Item"
+                                                    >
+                                                        <Trash size={16} />
+                                                    </button>
+                                                </div>
                                             )}
                                         </div>
                                         
