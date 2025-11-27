@@ -280,7 +280,28 @@ function App() {
 
     await persistData({ ...appData, lists: updatedLists });
   };
-  
+
+  const handleTogglePurchased = async (listId: string, itemId: string) => {
+    const listIndex = appData.lists.findIndex(l => l.id === listId);
+    if (listIndex === -1) return;
+
+    const list = appData.lists[listIndex];
+    const itemIndex = list.items.findIndex(i => i.id === itemId);
+    if (itemIndex === -1) return;
+
+    const item = list.items[itemIndex];
+
+    // Only allow toggling if current user claimed it
+    if (item.claimedBy !== currentUser) return;
+
+    const updatedLists = [...appData.lists];
+    const updatedItems = [...list.items];
+    updatedItems[itemIndex] = { ...item, isPurchased: !item.isPurchased };
+    updatedLists[listIndex] = { ...list, items: updatedItems };
+
+    await persistData({ ...appData, lists: updatedLists });
+  };
+
   const handleUpdateListLink = async (e: React.FormEvent) => {
       e.preventDefault();
       if (!activeListId) return;
@@ -411,14 +432,23 @@ function App() {
             </div>
 
             <div className="flex gap-2">
-                <button 
+                {currentUser && (
+                    <button
+                        onClick={() => { setView('MY_CLAIMS'); setActiveListId(null); }}
+                        className="bg-white/10 hover:bg-white/20 px-2 py-1 rounded text-xs font-medium flex items-center gap-1 transition"
+                        title="My Shopping List"
+                    >
+                        <ShoppingBag size={14} /> My Claims
+                    </button>
+                )}
+                <button
                     onClick={() => setShowSyncModal(true)}
                     className="bg-white/10 hover:bg-white/20 px-2 py-1 rounded text-xs font-medium flex items-center gap-1 transition"
                     title="Family Sync Settings"
                 >
                     <Settings size={14} /> Code
                 </button>
-                 <button 
+                 <button
                     onClick={() => setShowHelpModal(true)}
                     className="bg-white/10 hover:bg-white/20 px-2 py-1 rounded text-xs font-medium flex items-center gap-1 transition"
                     title="Help"
@@ -946,6 +976,100 @@ function App() {
     );
   };
 
+  const renderMyClaims = () => {
+    // Get all items claimed by current user across all lists
+    const myClaimedItems: Array<{ item: GiftItem; listOwner: string; listId: string }> = [];
+
+    appData.lists.forEach(list => {
+      list.items.forEach(item => {
+        if (item.claimedBy === currentUser) {
+          myClaimedItems.push({ item, listOwner: list.owner, listId: list.id });
+        }
+      });
+    });
+
+    const purchasedCount = myClaimedItems.filter(({ item }) => item.isPurchased).length;
+
+    return (
+      <div className="max-w-3xl mx-auto p-4 pb-20 animate-fade-in">
+        <button
+          onClick={() => { setView('HOME'); loadData(); }}
+          className="flex items-center gap-2 text-gray-600 hover:text-christmas-red mb-6 transition"
+        >
+          <ArrowLeft size={18} /> Back to all lists
+        </button>
+
+        <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-3xl font-bold text-christmas-green flex items-center gap-2">
+              <ShoppingBag size={32} /> My Shopping List
+            </h2>
+            <div className="text-sm text-gray-600">
+              {purchasedCount} of {myClaimedItems.length} purchased
+            </div>
+          </div>
+
+          {myClaimedItems.length === 0 ? (
+            <div className="text-center py-12 text-gray-400">
+              <ShoppingBag size={48} className="mx-auto mb-3 opacity-30" />
+              <p>You haven't claimed any gifts yet.</p>
+              <p className="text-sm mt-2">Go to someone's wishlist and claim gifts you plan to buy!</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {myClaimedItems.map(({ item, listOwner, listId }) => (
+                <div
+                  key={item.id}
+                  className={`flex items-start gap-3 p-4 rounded-lg border transition ${
+                    item.isPurchased
+                      ? 'bg-green-50 border-green-200'
+                      : 'bg-white border-gray-200 hover:border-christmas-green'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={item.isPurchased || false}
+                    onChange={() => handleTogglePurchased(listId, item.id)}
+                    className="mt-1 w-5 h-5 rounded accent-christmas-green cursor-pointer"
+                  />
+
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className={`font-semibold text-lg ${item.isPurchased ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                          {item.name}
+                        </h3>
+                        <p className="text-sm text-gray-600 mb-2">For: <span className="font-medium text-christmas-red">{listOwner}</span></p>
+
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-600">
+                          {item.store && <span className="flex items-center gap-1"><ShoppingBag size={12} /> {item.store}</span>}
+                          {item.price && <span className="font-semibold text-green-700">{item.price}</span>}
+                        </div>
+
+                        {item.notes && <p className="text-xs text-gray-500 mt-1 italic">{item.notes}</p>}
+                      </div>
+
+                      {item.link && (
+                        <a
+                          href={item.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs flex items-center gap-1 text-blue-500 hover:underline border border-blue-200 px-2 py-1 rounded whitespace-nowrap"
+                        >
+                          Link <ExternalLink size={10} />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const renderStatus = () => (
     <div className="fixed bottom-2 right-2 flex items-center gap-1.5 bg-white/90 backdrop-blur px-3 py-1.5 rounded-full shadow-sm border border-gray-200 text-xs font-medium text-gray-500 z-50">
         {syncStatus === 'SYNCED' && <><Cloud size={12} className="text-green-500" /> Online Mode</>}
@@ -963,6 +1087,7 @@ function App() {
       {renderAlertModal()}
       {view === 'HOME' && renderHome()}
       {view === 'LIST' && renderActiveList()}
+      {view === 'MY_CLAIMS' && renderMyClaims()}
       {renderStatus()}
     </div>
   );

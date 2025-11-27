@@ -9,6 +9,7 @@ export interface GiftItem {
   isBlackFriday?: boolean;
   isTimeSensitive?: boolean;
   claimedBy?: string | null; // Name of the person who claimed it
+  isPurchased?: boolean; // Whether the claimer has purchased it
 }
 
 export interface WishList {
@@ -24,4 +25,4 @@ export interface AppData {
   users: string[]; // List of all known family members
 }
 
-export type ViewState = 'HOME' | 'LIST';
+export type ViewState = 'HOME' | 'LIST' | 'MY_CLAIMS';
