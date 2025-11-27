@@ -357,6 +357,33 @@ function App() {
     handleCancelEditItem();
   };
 
+  const handleDeleteList = async (listId: string) => {
+    const list = appData.lists.find(l => l.id === listId);
+    if (!list) return;
+
+    // Confirm deletion
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete ${list.owner}'s entire wishlist? This cannot be undone.`
+    );
+
+    if (!confirmDelete) return;
+
+    // Remove the list
+    const updatedLists = appData.lists.filter(l => l.id !== listId);
+
+    // Optionally remove the user if they have no other lists
+    const ownerHasOtherLists = updatedLists.some(l => l.owner.toLowerCase() === list.owner.toLowerCase());
+    const updatedUsers = ownerHasOtherLists
+      ? appData.users
+      : appData.users.filter(u => u.toLowerCase() !== list.owner.toLowerCase());
+
+    await persistData({ users: updatedUsers, lists: updatedLists });
+
+    // Navigate back to home
+    setView('HOME');
+    setActiveListId(null);
+  };
+
   // --- Components ---
 
   const renderAlertModal = () => {
@@ -775,14 +802,28 @@ function App() {
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
             <div className="bg-christmas-green p-6 text-white relative overflow-hidden">
                 <div className="relative z-10">
-                    <h2 className="text-3xl font-bold flex items-center gap-3">
-                        {activeList.owner}'s Wishlist
-                        {isOwner && <span className="bg-christmas-gold text-christmas-green text-xs px-2 py-1 rounded-full uppercase tracking-wider font-bold shadow-sm">Me</span>}
-                    </h2>
+                    <div className="flex items-start justify-between">
+                        <div>
+                            <h2 className="text-3xl font-bold flex items-center gap-3">
+                                {activeList.owner}'s Wishlist
+                                {isOwner && <span className="bg-christmas-gold text-christmas-green text-xs px-2 py-1 rounded-full uppercase tracking-wider font-bold shadow-sm">Me</span>}
+                            </h2>
 
-                    <p className="text-green-100 opacity-90 mt-1">
-                        {isOwner ? "Add things you'd love to receive!" : `Pick something special for ${activeList.owner}.`}
-                    </p>
+                            <p className="text-green-100 opacity-90 mt-1">
+                                {isOwner ? "Add things you'd love to receive!" : `Pick something special for ${activeList.owner}.`}
+                            </p>
+                        </div>
+
+                        {isOwner && isDevMode && (
+                            <button
+                                onClick={() => handleDeleteList(activeList.id)}
+                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm font-medium flex items-center gap-1 transition"
+                                title="Delete this entire list"
+                            >
+                                <Trash size={14} /> Delete List
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
 
