@@ -6,15 +6,15 @@ const DEFAULT_BUCKET_ID = '4JqnYPuEYxqTZGWRyFbWou';
 const LOCAL_STORAGE_KEY_DATA = 'north_pole_data_cache';
 const LOCAL_STORAGE_KEY_SHARDED = 'north_pole_use_sharded';
 
-// Check if debug mode is enabled
-const isDebugMode = () => {
+// Check if dev mode is enabled
+const isDevMode = () => {
   const params = new URLSearchParams(window.location.search);
-  return params.get('debug') === 'true';
+  return params.get('dev') === 'true';
 };
 
 // Check if sharded storage should be used
 const useShardedStorage = () => {
-  if (!isDebugMode()) return false;
+  if (!isDevMode()) return false;
   const stored = localStorage.getItem(LOCAL_STORAGE_KEY_SHARDED);
   return stored === 'true';
 };

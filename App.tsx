@@ -55,15 +55,10 @@ function App() {
   const [editItemBF, setEditItemBF] = useState(false);
   const [editItemUrgent, setEditItemUrgent] = useState(false);
 
-  // Dev/Debug mode flags
+  // Dev mode flag
   const [isDevMode] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get('dev') === 'true';
-  });
-
-  const [isDebugMode] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('debug') === 'true';
   });
 
   // --- Effects ---
@@ -883,7 +878,7 @@ function App() {
                             const claimedByMe = item.claimedBy === currentUser;
                             const isEditing = editingItemId === item.id;
 
-                            if (isEditing && isDebugMode && isOwner) {
+                            if (isEditing && isDevMode && isOwner) {
                                 // Edit mode
                                 return (
                                     <div key={item.id} className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
@@ -1002,7 +997,7 @@ function App() {
 
                                             {isOwner && (
                                                 <div className="flex gap-1">
-                                                    {isDebugMode && (
+                                                    {isDevMode && (
                                                         <button
                                                             onClick={() => handleStartEditItem(item)}
                                                             className="text-gray-300 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
