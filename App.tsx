@@ -878,7 +878,7 @@ function App() {
                             const claimedByMe = item.claimedBy === currentUser;
                             const isEditing = editingItemId === item.id;
 
-                            if (isEditing && isDevMode && isOwner) {
+                            if (isEditing && isOwner) {
                                 // Edit mode
                                 return (
                                     <div key={item.id} className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
@@ -997,15 +997,13 @@ function App() {
 
                                             {isOwner && (
                                                 <div className="flex gap-1">
-                                                    {isDevMode && (
-                                                        <button
-                                                            onClick={() => handleStartEditItem(item)}
-                                                            className="text-gray-300 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                            title="Edit Item"
-                                                        >
-                                                            <Edit size={16} />
-                                                        </button>
-                                                    )}
+                                                    <button
+                                                        onClick={() => handleStartEditItem(item)}
+                                                        className="text-gray-300 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        title="Edit Item"
+                                                    >
+                                                        <Edit size={16} />
+                                                    </button>
                                                     <button
                                                         onClick={() => handleDeleteItem(item.id)}
                                                         className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
