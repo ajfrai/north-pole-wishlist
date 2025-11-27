@@ -375,11 +375,104 @@ function App() {
       );
   };
 
+  const renderSignIn = () => (
+    <div className="min-h-screen bg-[#F0EAD6] flex items-center justify-center p-4">
+      <div className="max-w-md w-full">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-3 mb-4">
+            <Gift size={48} className="text-christmas-red" />
+            <h1 className="text-4xl font-bold text-christmas-green">North Pole Lists</h1>
+          </div>
+          <p className="text-gray-600 text-lg">Who are you?</p>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          {!isAddingUser ? (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Select your name</label>
+                <select
+                  value={currentUser}
+                  onChange={(e) => handleUserChange(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-lg font-medium focus:outline-none focus:border-christmas-green cursor-pointer"
+                  autoFocus
+                >
+                  <option value="" disabled>Choose...</option>
+                  {appData.users.sort().map(u => (
+                    <option key={u} value={u}>{u}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">or</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsAddingUser(true)}
+                className="w-full bg-christmas-green text-white px-6 py-3 rounded-lg font-bold text-lg hover:bg-green-800 transition flex items-center justify-center gap-2"
+              >
+                <Plus size={20} /> Add New Person
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleAddUser} className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Your name</label>
+                <input
+                  autoFocus
+                  type="text"
+                  value={newUserName}
+                  onChange={(e) => setNewUserName(e.target.value)}
+                  placeholder="e.g. Sarah"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-lg focus:outline-none focus:border-christmas-green"
+                  required
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setIsAddingUser(false); setNewUserName(''); }}
+                  className="flex-1 py-3 text-gray-600 font-medium hover:bg-gray-100 rounded-lg transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-christmas-green text-white py-3 rounded-lg font-bold hover:bg-green-800 transition"
+                >
+                  Continue
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+
+        {isDevMode && (
+          <div className="text-center mt-4">
+            <button
+              onClick={() => setShowSyncModal(true)}
+              className="text-sm text-gray-500 hover:text-gray-700"
+            >
+              Dev: Family Sync Settings
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   const renderHeader = () => (
     <header className="bg-christmas-red text-white shadow-lg sticky top-0 z-50">
-      <div className="max-w-4xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-4">
-            <div 
+            <div
                 className="flex items-center gap-2 cursor-pointer hover:opacity-90 transition"
                 onClick={() => { setView('HOME'); setActiveListId(null); loadData(); }}
             >
@@ -388,15 +481,13 @@ function App() {
             </div>
 
             <div className="flex gap-2">
-                {currentUser && (
-                    <button
-                        onClick={() => { setView('MY_CLAIMS'); setActiveListId(null); }}
-                        className="bg-white/10 hover:bg-white/20 px-2 py-1 rounded text-xs font-medium flex items-center gap-1 transition"
-                        title="My Shopping List"
-                    >
-                        <ShoppingBag size={14} /> My Claims
-                    </button>
-                )}
+                <button
+                    onClick={() => { setView('MY_CLAIMS'); setActiveListId(null); }}
+                    className="bg-white/10 hover:bg-white/20 px-2 py-1 rounded text-xs font-medium flex items-center gap-1 transition"
+                    title="My Shopping List"
+                >
+                    <ShoppingBag size={14} /> My Claims
+                </button>
                 {isDevMode && (
                     <button
                         onClick={() => setShowSyncModal(true)}
@@ -415,45 +506,16 @@ function App() {
                 </button>
             </div>
         </div>
-        
-        <div className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full backdrop-blur-sm border border-white/20">
-          <User size={16} className="text-christmas-gold" />
-          <span className="text-sm font-medium whitespace-nowrap">I am:</span>
-          
-          {isAddingUser ? (
-             <form onSubmit={handleAddUser} className="flex items-center gap-1">
-                 <input 
-                    autoFocus
-                    type="text" 
-                    value={newUserName}
-                    onChange={(e) => setNewUserName(e.target.value)}
-                    placeholder="Name"
-                    className="bg-white/20 border-none focus:ring-1 focus:ring-christmas-gold text-white placeholder-white/50 text-sm rounded px-2 py-1 w-24 focus:outline-none"
-                  />
-                  <button type="submit" className="text-green-300 hover:text-green-100"><Save size={16} /></button>
-                  <button type="button" onClick={() => setIsAddingUser(false)} className="text-red-300 hover:text-red-100"><X size={16} /></button>
-             </form>
-          ) : (
-            <div className="flex items-center gap-2">
-                <select 
-                    value={currentUser}
-                    onChange={(e) => handleUserChange(e.target.value)}
-                    className="bg-transparent border-none focus:ring-0 text-white text-sm font-bold w-32 focus:outline-none cursor-pointer [&>option]:text-gray-800"
-                >
-                    <option value="" disabled>Select...</option>
-                    {appData.users.sort().map(u => (
-                        <option key={u} value={u}>{u}</option>
-                    ))}
-                </select>
-                <button 
-                    onClick={() => setIsAddingUser(true)}
-                    className="bg-christmas-gold text-christmas-red rounded-full p-0.5 hover:scale-110 transition"
-                    title="Add new family member"
-                >
-                    <Plus size={14} />
-                </button>
-            </div>
-          )}
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm opacity-90">Hi, <span className="font-bold">{currentUser}</span></span>
+          <button
+            onClick={() => { setCurrentUser(''); localStorage.removeItem('np_user'); setView('HOME'); }}
+            className="bg-white/10 hover:bg-white/20 px-2 py-1 rounded text-xs font-medium transition"
+            title="Sign out"
+          >
+            Sign Out
+          </button>
         </div>
       </div>
     </header>
@@ -953,6 +1015,17 @@ function App() {
         {syncStatus === 'LOCAL' && <><CloudOff size={12} className="text-orange-500" /> Local Mode (Sync Failed)</>}
     </div>
   );
+
+  // Show sign-in page if no user is selected
+  if (!currentUser) {
+    return (
+      <>
+        {renderSignIn()}
+        {renderSyncModal()}
+        {renderAlertModal()}
+      </>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F0EAD6] font-sans pb-10 relative">
