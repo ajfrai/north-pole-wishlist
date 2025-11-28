@@ -198,7 +198,7 @@ const saveShardedData = async (bucketId: string, data: AppData): Promise<boolean
 // --- PUBLIC API ---
 
 // Merge function to combine remote and local data intelligently
-const mergeAppData = (remote: AppData, local: AppData): AppData => {
+export const mergeAppData = (remote: AppData, local: AppData): AppData => {
   // Merge users (union)
   const allUsers = new Set([...remote.users, ...local.users]);
 
