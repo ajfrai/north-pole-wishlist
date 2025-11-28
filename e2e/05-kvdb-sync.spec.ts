@@ -28,7 +28,7 @@ test.describe('KVDB Sync Operations', () => {
     });
 
     await page.locator('select').selectOption('Megan');
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
 
     // Add a gift
     await page.getByPlaceholder(/gift name/i).fill('Sync Test Gift');
@@ -60,7 +60,7 @@ test.describe('KVDB Sync Operations', () => {
 
   test('should show syncing status during save', async ({ page }) => {
     await page.locator('select').selectOption('Megan');
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
 
     // Add a gift and watch for syncing status
     await page.getByPlaceholder(/gift name/i).fill('Fast Gift');
@@ -86,7 +86,7 @@ test.describe('KVDB Sync Operations', () => {
     });
 
     await page.locator('select').selectOption('Megan');
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
 
     await page.getByPlaceholder(/gift name/i).fill('Monolithic Test');
     await page.getByRole('button', { name: /add gift/i }).click();
@@ -122,7 +122,7 @@ test.describe('KVDB Sync Operations', () => {
 
     await page.reload();
     await page.locator('select').selectOption('Megan');
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
 
     // Clear previous requests
     requests.length = 0;
@@ -143,7 +143,7 @@ test.describe('KVDB Sync Operations', () => {
 
   test('should cache data in localStorage', async ({ page }) => {
     await page.locator('select').selectOption('Megan');
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
 
     // Add a unique gift
     const uniqueGiftName = `Cache Test ${Date.now()}`;
@@ -184,7 +184,7 @@ test.describe('KVDB Sync Operations', () => {
 
   test('should handle sync failures gracefully', async ({ page, context }) => {
     await page.locator('select').selectOption('Megan');
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
 
     // Block kvdb requests after initial load
     await context.route('**/kvdb.io/**', route => {
@@ -227,7 +227,7 @@ test.describe('KVDB Sync Operations', () => {
     });
 
     await page.locator('select').selectOption('Megan');
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
 
     const initialFetchCount = fetchCount;
 

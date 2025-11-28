@@ -29,7 +29,7 @@ test.describe('My Claims View', () => {
 
   test('should show claimed gifts in My Claims view', async ({ page }) => {
     // Claim a gift from Megan's list
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
     await page.getByRole('button', { name: /claim \(i bought this\)/i }).first().click();
 
     // Go to My Claims
@@ -41,7 +41,7 @@ test.describe('My Claims View', () => {
 
   test('should allow marking gifts as purchased', async ({ page }) => {
     // Claim a gift
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
     const firstGift = await page.locator('.group').first().locator('h3').first().textContent();
     await page.getByRole('button', { name: /claim \(i bought this\)/i }).first().click();
 
@@ -59,7 +59,7 @@ test.describe('My Claims View', () => {
 
   test('should allow unmarking purchased gifts', async ({ page }) => {
     // Claim and mark as purchased
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
     await page.getByRole('button', { name: /claim \(i bought this\)/i }).first().click();
 
     await page.getByRole('button', { name: /my claims/i }).click();
@@ -76,7 +76,7 @@ test.describe('My Claims View', () => {
 
   test('should show purchase count', async ({ page }) => {
     // Claim two gifts
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
     await page.getByRole('button', { name: /claim \(i bought this\)/i }).first().click();
     await page.getByRole('button', { name: /claim \(i bought this\)/i }).first().click();
 
@@ -93,7 +93,7 @@ test.describe('My Claims View', () => {
 
   test('should show gift details in My Claims', async ({ page }) => {
     // Claim a gift
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
     await page.getByRole('button', { name: /claim \(i bought this\)/i }).first().click();
 
     // Go to My Claims
@@ -111,7 +111,7 @@ test.describe('My Claims View', () => {
 
   test('should show gift links in My Claims', async ({ page }) => {
     // Navigate to Erin's list and add a gift with a link
-    await page.getByText('Erin', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Erin' }).click();
 
     // Add a gift with a link
     await page.getByPlaceholder(/gift name/i).fill('Gift with Link');
@@ -123,7 +123,7 @@ test.describe('My Claims View', () => {
     await page.locator('select').selectOption('Megan');
 
     // Claim the gift
-    await page.getByText('Erin', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Erin' }).click();
     await page.getByText('Gift with Link').locator('..').locator('..').getByRole('button', { name: /claim/i }).click();
 
     // Go to My Claims
@@ -146,19 +146,19 @@ test.describe('My Claims View', () => {
 
   test('should show multiple claimed gifts from different users', async ({ page }) => {
     // Claim from Megan
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
     await page.getByRole('button', { name: /claim \(i bought this\)/i }).first().click();
 
     // Go back and add own gifts, then switch user and claim
     await page.goto('/');
-    await page.getByText('Erin', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Erin' }).click();
     await page.getByPlaceholder(/gift name/i).fill('Erin Gift');
     await page.getByRole('button', { name: /add gift/i }).click();
 
     // Switch to Megan and claim Erin's gift
     await page.getByRole('button', { name: /sign out/i }).click();
     await page.locator('select').selectOption('Megan');
-    await page.getByText('Erin', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Erin' }).click();
     await page.getByRole('button', { name: /claim \(i bought this\)/i }).first().click();
 
     // Go to My Claims
@@ -170,7 +170,7 @@ test.describe('My Claims View', () => {
 
   test('should persist purchased status', async ({ page }) => {
     // Claim and purchase
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
     await page.getByRole('button', { name: /claim \(i bought this\)/i }).first().click();
     await page.getByRole('button', { name: /my claims/i }).click();
     await page.locator('input[type="checkbox"]').first().check();

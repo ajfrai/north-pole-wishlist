@@ -24,7 +24,7 @@ test.describe('Gift Management', () => {
 
   test('should add a new gift item', async ({ page }) => {
     // Navigate to Megan's list
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
 
     // Fill in the gift form
     await page.getByPlaceholder(/gift name/i).fill('Test Gift');
@@ -48,7 +48,7 @@ test.describe('Gift Management', () => {
   });
 
   test('should show celebratory snowflakes after adding a gift', async ({ page }) => {
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
 
     // Add a gift
     await page.getByPlaceholder(/gift name/i).fill('Celebration Gift');
@@ -60,7 +60,7 @@ test.describe('Gift Management', () => {
   });
 
   test('should allow deleting a gift (owner only)', async ({ page }) => {
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
 
     // Add a gift to delete
     await page.getByPlaceholder(/gift name/i).fill('Gift to Delete');
@@ -81,7 +81,7 @@ test.describe('Gift Management', () => {
     // Navigate with dev mode
     await page.goto('/?dev=true');
     await page.locator('select').selectOption('Megan');
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
 
     // Add a gift to edit
     await page.getByPlaceholder(/gift name/i).fill('Gift to Edit');
@@ -112,7 +112,7 @@ test.describe('Gift Management', () => {
   });
 
   test('should not show edit button in normal mode', async ({ page }) => {
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
 
     // Add a gift
     await page.getByPlaceholder(/gift name/i).fill('Normal Mode Gift');
@@ -127,7 +127,7 @@ test.describe('Gift Management', () => {
   });
 
   test('should handle multiple gift items', async ({ page }) => {
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
 
     // Add multiple gifts
     const gifts = ['Gift 1', 'Gift 2', 'Gift 3'];
@@ -145,7 +145,7 @@ test.describe('Gift Management', () => {
   });
 
   test('should mark items as urgent', async ({ page }) => {
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
 
     // Add an urgent gift
     await page.getByPlaceholder(/gift name/i).fill('Urgent Gift');

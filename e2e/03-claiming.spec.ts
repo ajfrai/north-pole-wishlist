@@ -16,7 +16,7 @@ test.describe('Gift Claiming', () => {
     await page.locator('select').selectOption('Erin');
 
     // Navigate to Megan's list
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
 
     // Find a gift and claim it
     const claimButton = page.getByRole('button', { name: /claim \(i bought this\)/i }).first();
@@ -31,7 +31,7 @@ test.describe('Gift Claiming', () => {
     await page.locator('select').selectOption('Erin');
 
     // Navigate to Megan's list
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
 
     // Claim a gift
     const claimButton = page.getByRole('button', { name: /claim \(i bought this\)/i }).first();
@@ -49,7 +49,7 @@ test.describe('Gift Claiming', () => {
     await page.locator('select').selectOption('Megan');
 
     // Navigate to own list
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
 
     // Should not see claim buttons on own list
     await expect(page.getByRole('button', { name: /claim/i })).not.toBeVisible();
@@ -58,7 +58,7 @@ test.describe('Gift Claiming', () => {
   test('should hide claimer identity from list owner', async ({ page }) => {
     // Sign in as Erin and claim a gift
     await page.locator('select').selectOption('Erin');
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
     const claimButton = page.getByRole('button', { name: /claim \(i bought this\)/i }).first();
     await claimButton.click();
 
@@ -67,7 +67,7 @@ test.describe('Gift Claiming', () => {
 
     // Sign in as Megan (the owner)
     await page.locator('select').selectOption('Megan');
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
 
     // Should not see who claimed the gift
     await expect(page.getByText('Taken by Erin')).not.toBeVisible();
@@ -77,7 +77,7 @@ test.describe('Gift Claiming', () => {
   test('should show claimer identity to other users', async ({ page }) => {
     // Sign in as Erin and claim a gift
     await page.locator('select').selectOption('Erin');
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
 
     // Get the first gift name to track it
     const firstGiftName = await page.locator('.group').first().locator('h3').first().textContent();
@@ -96,7 +96,7 @@ test.describe('Gift Claiming', () => {
     await page.getByRole('button', { name: /continue/i }).click();
 
     // Navigate to Megan's list
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
 
     // Should see that Erin claimed it
     await expect(page.getByText('Taken by Erin')).toBeVisible();
@@ -105,7 +105,7 @@ test.describe('Gift Claiming', () => {
   test('should prevent claiming already claimed gifts', async ({ page }) => {
     // Sign in as Erin and claim a gift
     await page.locator('select').selectOption('Erin');
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
     const claimButton = page.getByRole('button', { name: /claim \(i bought this\)/i }).first();
     await claimButton.click();
 
@@ -117,7 +117,7 @@ test.describe('Gift Claiming', () => {
     await page.getByRole('button', { name: /continue/i }).click();
 
     // Navigate to Megan's list
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
 
     // The claimed button should be disabled
     const claimedButton = page.getByRole('button', { name: 'Claimed' }).first();
@@ -137,7 +137,7 @@ test.describe('Gift Claiming', () => {
     await page.locator('select').selectOption('Megan');
 
     // Navigate to own list (case should be handled correctly)
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
 
     // Should not see claim buttons (even with case differences in storage)
     await expect(page.getByRole('button', { name: /claim/i })).not.toBeVisible();
@@ -145,7 +145,7 @@ test.describe('Gift Claiming', () => {
 
   test('should update claim status immediately', async ({ page }) => {
     await page.locator('select').selectOption('Erin');
-    await page.getByText('Megan', { exact: true }).click();
+    await page.getByRole('heading', { name: 'Megan' }).click();
 
     // Count unclaimed gifts
     const initialClaimButtons = await page.getByRole('button', { name: /claim \(i bought this\)/i }).count();

@@ -197,6 +197,65 @@ const saveShardedData = async (bucketId: string, data: AppData): Promise<boolean
 
 // --- PUBLIC API ---
 
+// Merge function to combine remote and local data intelligently
+const mergeAppData = (remote: AppData, local: AppData): AppData => {
+  // Merge users (union)
+  const allUsers = new Set([...remote.users, ...local.users]);
+
+  // Merge lists by ID
+  const remoteListsMap = new Map(remote.lists.map(l => [l.id, l]));
+  const localListsMap = new Map(local.lists.map(l => [l.id, l]));
+
+  const mergedLists: WishList[] = [];
+
+  // Get all unique list IDs
+  const allListIds = new Set([...remoteListsMap.keys(), ...localListsMap.keys()]);
+
+  for (const listId of allListIds) {
+    const remoteList = remoteListsMap.get(listId);
+    const localList = localListsMap.get(listId);
+
+    if (!remoteList) {
+      // List only exists locally - keep it
+      mergedLists.push(localList!);
+    } else if (!localList) {
+      // List only exists remotely - keep it
+      mergedLists.push(remoteList);
+    } else {
+      // List exists in both - merge items
+      const remoteItemsMap = new Map(remoteList.items.map(i => [i.id, i]));
+      const localItemsMap = new Map(localList.items.map(i => [i.id, i]));
+
+      const allItemIds = new Set([...remoteItemsMap.keys(), ...localItemsMap.keys()]);
+      const mergedItems: typeof remoteList.items = [];
+
+      for (const itemId of allItemIds) {
+        const remoteItem = remoteItemsMap.get(itemId);
+        const localItem = localItemsMap.get(itemId);
+
+        if (!remoteItem) {
+          mergedItems.push(localItem!);
+        } else if (!localItem) {
+          mergedItems.push(remoteItem);
+        } else {
+          // Both exist - prefer local (last write wins)
+          mergedItems.push(localItem);
+        }
+      }
+
+      mergedLists.push({
+        ...localList,
+        items: mergedItems
+      });
+    }
+  }
+
+  return {
+    users: Array.from(allUsers),
+    lists: mergedLists
+  };
+};
+
 export const fetchAppData = async (): Promise<AppData> => {
   let cloudData: AppData | null = null;
   let localData: AppData | null = null;
@@ -272,14 +331,41 @@ export const saveAppData = async (data: AppData): Promise<boolean> => {
   if (!bucketId) return false;
 
   try {
+    // READ-BEFORE-WRITE: Fetch latest data from kvdb to prevent race conditions
+    let latestRemoteData: AppData | null = null;
+
     if (useShardedStorage()) {
-      return await saveShardedData(bucketId, data);
+      latestRemoteData = await fetchShardedData(bucketId);
+
+      // Fall back to monolithic if sharded fails
+      if (!latestRemoteData) {
+        const response = await fetch(`https://kvdb.io/${bucketId}/data_v1`, { cache: 'no-store' });
+        if (response.ok) {
+          latestRemoteData = await response.json();
+        }
+      }
+    } else {
+      // Fetch from monolithic storage
+      const response = await fetch(`https://kvdb.io/${bucketId}/data_v1`, { cache: 'no-store' });
+      if (response.ok) {
+        latestRemoteData = await response.json();
+      }
+    }
+
+    // Merge our changes with the latest remote data
+    const dataToSave = latestRemoteData
+      ? mergeAppData(latestRemoteData, data)
+      : data;
+
+    // Now write the merged data
+    if (useShardedStorage()) {
+      return await saveShardedData(bucketId, dataToSave);
     } else {
       // Use monolithic storage
       const response = await fetch(`https://kvdb.io/${bucketId}/data_v1`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(dataToSave),
         keepalive: true
       });
 
