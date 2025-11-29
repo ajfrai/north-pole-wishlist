@@ -1070,7 +1070,7 @@ function App() {
                                             
                                             {!isOwner && isClaimed && (
                                                 <span className="text-xs font-bold text-christmas-red bg-red-50 px-2 py-1 rounded border border-red-100">
-                                                    Taken by {claimedByMe ? "You" : item.claimedBy}
+                                                    {claimedByMe ? "Claimed by You" : "Claimed"}
                                                 </span>
                                             )}
                                         </div>
